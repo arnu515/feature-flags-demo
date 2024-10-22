@@ -5,6 +5,7 @@ import { getUser } from "@/lib/session";
 import BackButton from "./BackButton";
 import PostForm from "@/components/PostForm";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 async function getUserPosts(username: string) {
   const user = (
@@ -81,9 +82,9 @@ async function PostId({ postId }: { postId: string }) {
         <BackButton />
         <h3 className="text-xl">
           {post.is_comment && <span className="text-gray-500">In reply, </span>}
-          <a href={`/@${post.username}`} className="font-bold">
+          <Link href={`/@${post.username}`} className="font-bold">
             @{post.username}
-          </a>{" "}
+          </Link>{" "}
           says:
         </h3>
       </div>

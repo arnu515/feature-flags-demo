@@ -2,6 +2,7 @@ import PostForm from "@/components/PostForm";
 import sql from "@/lib/db";
 import { getUser } from "@/lib/session";
 import Post, { type PropPost } from "@/components/Post";
+import Link from "next/link";
 
 function getPosts() {
   return sql<
@@ -16,9 +17,9 @@ export default async function Index() {
       {user ? (
         <PostForm username={user.username} />
       ) : (
-        <a href="/auth" className="btn">
+        <Link href="/auth" className="btn">
           Sign up to create a post
-        </a>
+        </Link>
       )}
       <h1 className="text-2xl font-medium mt-8 mb-4">Posts</h1>
       {!posts.length ? (
