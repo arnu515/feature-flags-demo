@@ -18,10 +18,10 @@ CREATE TABLE IF NOT EXISTS posts (
 );
 
 CREATE TABLE IF NOT EXISTS likes (
-    id TEXT PRIMARY KEY,
     user_id TEXT REFERENCES users(id),
     post_id TEXT REFERENCES posts(id),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    primary key (user_id, post_id)
 );
 
 COMMIT;

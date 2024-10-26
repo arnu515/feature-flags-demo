@@ -4,6 +4,7 @@ import sql from "@/lib/db";
 import { getUser } from "@/lib/session";
 import BackButton from "./BackButton";
 import PostForm from "@/components/PostForm";
+import LikeButton from "@/components/LikeButton";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
@@ -22,7 +23,7 @@ async function getPost(postId: string) {
     (
       await sql<
         PropPost[]
-      >`SELECT p.id, p.content, p.parent_id, p.user_id, p.is_comment, p.created_at, u.username, par.content as parent_content, par.created_at as parent_created_at, (SELECT us.username as parent_username FROM users us WHERE us.id = par.user_id), (SELECT count(id) as comments_count FROM posts child WHERE child.parent_id = p.id AND child.is_comment = true), (SELECT count(id) as likes_count FROM likes WHERE likes.post_id = p.id) FROM posts p INNER JOIN users u ON p.user_id = u.id LEFT JOIN posts par ON par.id = p.parent_id WHERE p.id = ${postId}`
+      >`SELECT p.id, p.content, p.parent_id, p.user_id, p.is_comment, p.created_at, u.username, par.content as parent_content, par.created_at as parent_created_at, (SELECT us.username as parent_username FROM users us WHERE us.id = par.user_id), (SELECT count(id) as comments_count FROM posts child WHERE child.parent_id = p.id AND child.is_comment = true), (SELECT count(*) as likes_count FROM likes WHERE likes.post_id = p.id) FROM posts p INNER JOIN users u ON p.user_id = u.id LEFT JOIN posts par ON par.id = p.parent_id WHERE p.id = ${postId}`
     )[0] ?? null
   );
 }
@@ -30,7 +31,12 @@ async function getPost(postId: string) {
 function getComments(postId: string) {
   return sql<
     PropPost[]
-  >`SELECT p.id, p.content, p.parent_id, p.user_id, p.is_comment, p.created_at, u.username, (SELECT count(id) as comments_count FROM posts child WHERE child.parent_id = p.id AND child.is_comment = true), (SELECT count(id) as likes_count FROM likes WHERE likes.post_id = p.id) FROM posts p INNER JOIN users u ON p.user_id = u.id WHERE p.is_comment = true and p.parent_id = ${postId}`;
+  >`SELECT p.id, p.content, p.parent_id, p.user_id, p.is_comment, p.created_at, u.username, (SELECT count(id) as comments_count FROM posts child WHERE child.parent_id = p.id AND child.is_comment = true), (SELECT count(*) as likes_count FROM likes WHERE likes.post_id = p.id) FROM posts p INNER JOIN users u ON p.user_id = u.id WHERE p.is_comment = true and p.parent_id = ${postId}`;
+}
+
+async function getHasLiked(postId: string, userId?: string) {
+  if (!userId) return false;
+  return (await sql`SELECT 1 FROM likes WHERE post_id = ${postId} AND user_id = ${userId} LIMIT 1`).count == 1
 }
 
 async function Username({ username }: { username: string }) {
@@ -57,6 +63,7 @@ async function PostId({ postId }: { postId: string }) {
     getPost(postId),
     getComments(postId),
   ]);
+  const isLiked = await getHasLiked(post.id, user?.id)
   if (!post) notFound();
 
   return (
@@ -107,21 +114,7 @@ async function PostId({ postId }: { postId: string }) {
         </div>
       )}
       <footer className="flex gap-2 px-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="size-6"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
-          />
-        </svg>
-        {post.likes_count}
+        <LikeButton num={post.likes_count} postId={post.id} isLiked={isLiked} />
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"

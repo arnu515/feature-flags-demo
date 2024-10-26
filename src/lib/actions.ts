@@ -40,3 +40,22 @@ export async function createPost(
   if (!is_comment) redirect(`/${id}`);
   else revalidatePath(`/${parentId}`);
 }
+
+export async function likePost(postId: string, like: boolean) {
+  const user = await getUser();
+  if (!user) redirect("/auth");
+  try {
+    let numRows: number;
+    if (like) numRows = (await sql`insert into likes ${sql({ user_id: user.id, post_id: postId })} on conflict do nothing`).count
+    else numRows = (await sql`delete from likes where user_id = ${user.id} and post_id = ${postId}`).count
+    if (numRows != 1) return {success: false, error: ""}
+    revalidatePath(`/${postId}`)
+  } catch (e) {
+    console.error(e);
+    return {
+      error: "An error occured: " + ((e as any).message || "Unknown error"),
+      success: false
+    };
+  } 
+} 
+
