@@ -18,6 +18,5 @@ export type User = {
 };
 
 export const sql = postgres(process.env.DATABASE_URL!);
-// const db = drizzle(sql)
 
 export default sql;
