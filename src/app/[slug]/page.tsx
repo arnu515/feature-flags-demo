@@ -15,7 +15,7 @@ async function getUserPosts(username: string) {
   if (!user) notFound();
   return await sql<
     PropPost[]
-  >`SELECT p.id, p.content, p.parent_id, p.user_id, p.is_comment, p.created_at, u.username, par.content as parent_content, par.created_at as parent_created_at, (SELECT us.username as parent_username FROM users us WHERE us.id = par.user_id), (SELECT count(id) as comments_count FROM posts child WHERE child.parent_id = p.id AND child.is_comment = true), (SELECT count(id) as likes_count FROM likes WHERE likes.post_id = p.id) FROM posts p INNER JOIN users u ON p.user_id = u.id LEFT JOIN posts par ON par.id = p.parent_id WHERE p.is_comment = false and p.user_id = ${user.id} ORDER BY p.created_at DESC`;
+  >`SELECT p.id, p.content, p.parent_id, p.user_id, p.is_comment, p.created_at, u.username, par.content as parent_content, par.created_at as parent_created_at, (SELECT us.username as parent_username FROM users us WHERE us.id = par.user_id), (SELECT count(id) as comments_count FROM posts child WHERE child.parent_id = p.id AND child.is_comment = true), (SELECT count(*) as likes_count FROM likes WHERE likes.post_id = p.id) FROM posts p INNER JOIN users u ON p.user_id = u.id LEFT JOIN posts par ON par.id = p.parent_id WHERE p.is_comment = false and p.user_id = ${user.id} ORDER BY p.created_at DESC`;
 }
 
 async function getPost(postId: string) {
